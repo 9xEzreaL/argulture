@@ -188,18 +188,15 @@ if __name__=='__main__':
     with open(join(dst_root, args.experiment_name, 'setting.txt'), 'w') as f:
         f.write(json.dumps(vars(args), indent=4, separators=(',', ':')))
 
+    num_gpu = torch.cuda.device_count()
+
     from dataloader import MetaDataset
     train_dataset = MetaDataset(data_root, csv_path, 'train', 0)
-    valid_dataset = MetaDataset(data_root, csv_path, 'valid', 0)
-    test_dataset = MetaDataset(data_root, csv_path, 'test', 0)
-
-    num_gpu = torch.cuda.device_count()
 
     train_dataloader = data.DataLoader(dataset=train_dataset, batch_size=args.batch_size_per_gpu * num_gpu,
                                        num_workers=10, drop_last=True, sampler=ImbalancedDatasetSampler(train_dataset))
-    test_dataloader = data.DataLoader(dataset=test_dataset, batch_size=args.batch_size_per_gpu * num_gpu, shuffle=False, num_workers=10, drop_last=False)
 
-    print('Training images:', len(train_dataset), '/', 'Validating images:', len(valid_dataset))
+    print('Training images:', len(train_dataset))
 
     classifier = Classifier(args, net=args.net)
     progressbar = Progressbar()
@@ -229,5 +226,3 @@ if __name__=='__main__':
             dst_root, args.experiment_name, 'checkpoint', 'weights.{:d}.pth'.format(epoch)
         ))
 
-
-# CUDA_VISIBLE_DEVICES=3 python main_first.py --net meta_densenet --experiment_name meta_densenet_sam_optim_512_1028_1030 --lr 0.0005 --ckpt meta_densenet_sam_optim_512_1028/checkpoint/weights.29.pth --gpu --batch_size 15

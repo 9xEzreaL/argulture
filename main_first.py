@@ -35,7 +35,7 @@ def parse(args=None):
 
     parser.add_argument('--img_size', dest='img_size', type=int, default=256)
     parser.add_argument('--epochs', dest='epochs', type=int, default=30, help='# of epochs')
-    parser.add_argument('--batch_size_per_gpu', dest='batch_size_per_gpu', type=int, default=6) # training batch size
+    parser.add_argument('--batch_size_per_gpu', dest='batch_size_per_gpu', type=int, default=20) # training batch size
     parser.add_argument('--lr', dest='lr', type=float, default=0.02, help='learning rate')
     parser.add_argument('--thres_int', dest='thres_int', type=float, default=0.5)
     parser.add_argument('--test_int', dest='test_int', type=float, default=1.0)
@@ -160,9 +160,9 @@ class Classifier():
         return network_mapping[net]
 
 if __name__=='__main__':
-    dst_root = './log/' # where your model saved
-    data_root = '/disk1/jjwu/produce/' # where your data root in
-    csv_path = '/disk1/jjwu/produce/final.csv' # where your csv
+    dst_root = '' # where your model saved
+    data_root = '' # where your data root in
+    csv_path = '' # where your csv
 
     args = parse()
 
@@ -188,36 +188,36 @@ if __name__=='__main__':
     classifier = Classifier(args, net=args.net)
     progressbar = Progressbar()
 
-    # print("Train (H, W) = (512, 512)")
-    # from dataloader import Meta512Dataset
-    # train_dataset = Meta512Dataset(data_root, csv_path, 'train', 0)
-    # train_dataloader = data.DataLoader(dataset=train_dataset, batch_size=args.batch_size_per_gpu * 2 * num_gpu,
-    #                                    num_workers=10, drop_last=True, sampler=ImbalancedDatasetSampler(train_dataset))
+    print("Train (H, W) = (512, 512)")
+    from dataloader import Meta512Dataset
+    train_dataset = Meta512Dataset(data_root, csv_path, 'train', 0)
+    train_dataloader = data.DataLoader(dataset=train_dataset, batch_size=args.batch_size_per_gpu * 2 * num_gpu,
+                                       num_workers=10, drop_last=True, sampler=ImbalancedDatasetSampler(train_dataset))
 
-    # print('Training images:', len(train_dataset))
+    print('Training images:', len(train_dataset))
 
-    # it = 0
-    # it_per_epoch = len(train_dataset) // (args.batch_size_per_gpu * num_gpu)
-    # for epoch in range(args.epochs):
-    #     lr = args.lr_base * (0.9 ** epoch)
-    #     classifier.set_lr(lr)
-    #     classifier.train()
-    #     writer.add_scalar('LR/learning_rate', lr, it + 1)
-    #     metric_tr = Metric(num_classes=33)
-    #     metric_ev = Metric(num_classes=33)
-    #     for img_a, att_a, geo_info, _ in progressbar(train_dataloader):
-    #         img_a = img_a.cuda() if args.gpu else img_a
-    #         att_a = att_a.cuda() if args.gpu else att_a
-    #         geo_a = geo_info.cuda() if args.gpu else geo_info
-    #         att_a = att_a.type(torch.float)
-    #         img_a = img_a.type(torch.float)
-    #         geo_a = geo_a.type(torch.float)
+    it = 0
+    it_per_epoch = len(train_dataset) // (args.batch_size_per_gpu * num_gpu)
+    for epoch in range(args.epochs):
+        lr = args.lr_base * (0.9 ** epoch)
+        classifier.set_lr(lr)
+        classifier.train()
+        writer.add_scalar('LR/learning_rate', lr, it + 1)
+        metric_tr = Metric(num_classes=33)
+        metric_ev = Metric(num_classes=33)
+        for img_a, att_a, geo_info, _ in progressbar(train_dataloader):
+            img_a = img_a.cuda() if args.gpu else img_a
+            att_a = att_a.cuda() if args.gpu else att_a
+            geo_a = geo_info.cuda() if args.gpu else geo_info
+            att_a = att_a.type(torch.float)
+            img_a = img_a.type(torch.float)
+            geo_a = geo_a.type(torch.float)
 
-    #         print(att_a)
-    #         errD, acc, f1 = classifier.train_model(img_a, att_a, geo_a, metric_tr)
-    #         add_scalar_dict(writer, errD, it+1, 'D')
-    #         it += 1
-    #         progressbar.say(epoch=epoch, d_loss=errD['d_loss'], acc=acc.item(), f1=f1.item())
+            print(att_a)
+            errD, acc, f1 = classifier.train_model(img_a, att_a, geo_a, metric_tr)
+            add_scalar_dict(writer, errD, it+1, 'D')
+            it += 1
+            progressbar.say(epoch=epoch, d_loss=errD['d_loss'], acc=acc.item(), f1=f1.item())
 
 
     print("Train (H, W) = (768, 768)")
